@@ -132,10 +132,28 @@ function minimax(depth,alpha,beta,maximizing){
   if(maximizing){best=Math.max(best,v);alpha=Math.max(alpha,v)}else{best=Math.min(best,v);beta=Math.min(beta,v)}if(beta<=alpha)break}
  return best;
 }
+function movePriority(m){
+ const p=board[m.fr][m.fc],target=board[m.r][m.c];
+ let score=0;
+ if(target||m.ep)score+=10000;
+ if(m.promo)score+=9000;
+ if(p&&p.toUpperCase()==="P")score+=2500;
+ if(p&&p.toUpperCase()==="N")score+=200;
+ const center=Math.abs(3.5-m.c)+Math.abs(3.5-m.r);
+ score+=Math.max(0,10-center);
+ return score;
+}
 function aiMove(){
- if(gameOver||turn!=="b")return;const depth=$("difficulty").value==="easy"?1:$("difficulty").value==="medium"?2:3,moves=allMoves("b");if(!moves.length)return;
+ if(gameOver||turn!=="b")return;
+ const depth=$("difficulty").value==="easy"?1:$("difficulty").value==="medium"?2:3;
+ const moves=allMoves("b").sort((a,b)=>movePriority(b)-movePriority(a));
+ if(!moves.length)return;
  let best=moves[0],bestV=Infinity;
- for(const m of moves){const old=applyMove(m,false),v=minimax(depth-1,-Infinity,Infinity,true);restore(old);if(v<bestV){bestV=v;best=m}}
+ for(const m of moves){
+  const old=applyMove(m,false),v=minimax(depth-1,-Infinity,Infinity,true);restore(old);
+  if(v<bestV-0.001){bestV=v;best=m}
+  else if(Math.abs(v-bestV)<0.001&&movePriority(m)>movePriority(best)){best=m}
+ }
  make(best);
 }
 function parseVoice(t){
