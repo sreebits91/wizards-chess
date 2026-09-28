@@ -110,8 +110,16 @@ function animateMove(m,capture=false){
   requestAnimationFrame(()=>{const target=boardEl.querySelector(`.sq[data-r="${m.r}"][data-c="${m.c}"]`);if(!target)return;target.classList.add(capture?"magic-capture":"magic-move","magic-cast");magicBurst(target,capture?"capture":"move");magicSound(capture?"capture":"move")});
 }
 function make(m){
- if(gameOver)return;const text=notation(m,board[m.fr][m.fc]);const old=applyMove(m,true);selected=null;$("heard").textContent=text;draw();finishCheck();
- animateMove(m, !!old.captured || !!m.ep); if(inCheck(board,turn)){magicSound("check"); magicMessage("Check!");} if(gameOver&&inCheck(board,turn)){magicSound("check"); magicMessage("Checkmate!");} if(!gameOver&&$("mode").value==="ai"&&turn==="b")setTimeout(aiMove,260);
+ if(gameOver)return;
+ const text=notation(m,board[m.fr][m.fc]);
+ const old=applyMove(m,true);
+ selected=null;$("heard").textContent=text;draw();finishCheck();
+ animateMove(m,!!old.captured||!!m.ep);
+ if(inCheck(board,turn)){magicSound("check");magicMessage("Check!");speak("Check.");}
+ if(gameOver&&inCheck(board,turn)){magicSound("check");magicMessage("Checkmate!");speak("Checkmate.");}
+ else if(gameOver){speak("Stalemate. The game is drawn.");}
+ else if($("mode").value==="ai"&&turn==="b"){speak("My turn.");setTimeout(aiMove,500);}
+ else if($("mode").value==="human"){speak(turn==="w"?"White to move.":"Black to move.");}
 }
 function clickSquare(r,c){
  if(gameOver||($("mode").value==="ai"&&turn==="b"))return;const p=board[r][c];
@@ -166,18 +174,35 @@ function parseVoice(t){
  }
  if(!from||!to)return false;const m=legalMoves(from[0],from[1]).find(x=>x.r===to[0]&&x.c===to[1]);if(m){make(Object.assign({fr:from[0],fc:from[1]},m));return true}return false;
 }
+function speak(text){
+ try{
+  if(!("speechSynthesis" in window))return;
+  window.speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(text);
+  u.lang="en-GB";u.rate=.9;u.pitch=.8;u.volume=1;
+  window.speechSynthesis.speak(u);
+ }catch(e){}
+}
 function setupVoice(){
  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
  if(!SR){$("support").textContent="Speech recognition is not available in this browser. Use the board controls.";$("voiceBtn").disabled=true;return}
  voice=new SR();voice.lang="en-GB";voice.interimResults=false;voice.continuous=false;
- voice.onstart=()=>{$("voiceStatus").textContent="Listening…";$("voiceBtn").textContent="🎙 Listening"};
+ voice.onstart=()=>{$("voiceStatus").textContent="Listening…";$("voiceBtn").textContent="🎙 Listening";speak("I am listening.")};
  voice.onend=()=>{$("voiceStatus").textContent="Voice idle";$("voiceBtn").textContent="🎙 Listen"};
- voice.onerror=e=>$("voiceStatus").textContent="Voice error: "+e.error;
- voice.onresult=e=>{const t=e.results[0][0].transcript;$("heard").textContent="Heard: "+t;if(!parseVoice(t))$("status").textContent="I could not map that to a legal move."};
- $("voiceBtn").onclick=()=>voice.start();$("stopVoice").onclick=()=>voice&&voice.stop();
+ voice.onerror=e=>{$("voiceStatus").textContent="Voice error: "+e.error;speak(e.error==="not-allowed"?"Please allow microphone access.": "I could not hear you. Please try again.")};
+ voice.onresult=e=>{
+  const t=e.results[0][0].transcript;
+  $("heard").textContent="Heard: "+t;
+  if(!parseVoice(t)){ $("status").textContent="I could not map that to a legal move."; speak("I didn't understand that move."); }
+ };
+ $("voiceBtn").onclick=()=>{
+  if(turn!=="w"&&$("mode").value==="ai"){speak("It is the wizard's turn.");return}
+  try{voice.start()}catch(e){}
+ };
+ $("stopVoice").onclick=()=>voice&&voice.stop();
 }
 $("undoBtn").onclick=()=>{if(undo()&&$("mode").value==="ai")undo()};
-$("resetBtn").onclick=()=>{board=start();turn="w";selected=null;history=[];enPassant=null;castling={K:true,Q:true,k:true,q:true};gameOver=false;$("status").textContent="New game. White to move.";draw()};
+$("resetBtn").onclick=()=>{board=start();turn="w";selected=null;history=[];enPassant=null;castling={K:true,Q:true,k:true,q:true};gameOver=false;$("status").textContent="New game. White to move.";draw();speak("New game. White to move.")};
 $("mode").onchange=()=>{$("status").textContent=$("mode").value==="human"?"Two-player mode.":"Play the Wizard — you are White."};
-setupVoice();draw();
+setupVoice();draw();speak("Welcome to Wizard's Chess. White to move.");
 })();
