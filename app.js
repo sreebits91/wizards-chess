@@ -5,6 +5,14 @@ const files="abcdefgh", start=()=>[
 ...Array.from({length:4},()=>Array(8).fill(null)),Array(8).fill("P"),
 ["R","N","B","Q","K","B","N","R"]];
 let board=start(),turn="w",selected=null,history=[],enPassant=null,castling={K:true,Q:true,k:true,q:true},gameOver=false,voice=null;
+let clockSeconds={w:600,b:600},clockInterval=null,clockStarted=false;
+function formatTime(s){const m=Math.floor(Math.max(0,s)/60),sec=Math.max(0,s)%60;return String(m).padStart(2,"0")+":"+String(sec).padStart(2,"0")}
+function updateClockUI(){const w=$("whiteTimer"),b=$("blackTimer");if(w)w.textContent=formatTime(clockSeconds.w);if(b)b.textContent=formatTime(clockSeconds.b)}
+function stopClock(){if(clockInterval){clearInterval(clockInterval);clockInterval=null}}
+function startClock(){if(clockStarted||gameOver)return;clockStarted=true;clockInterval=setInterval(()=>{if(gameOver)return;clockSeconds[turn]--;updateClockUI();if(clockSeconds[turn]<=0){clockSeconds[turn]=0;gameOver=true;stopClock();const winner=turn==="w"?"Black":"White";$("status").textContent="Time! "+winner+" wins.";speak("Time is up. "+winner+" wins.");magicMessage("Time! "+winner+" wins.")}},1000)}
+function resetClock(){stopClock();clockStarted=false;const n=Number($("timeControl")?.value||600);clockSeconds={w:n,b:n};updateClockUI()}
+function announceMove(m,p,captured){const name={P:"pawn",N:"knight",B:"bishop",R:"rook",Q:"queen",K:"king"}[p.toUpperCase()];let text=name+" "+(captured?"captures":"moves")+" from "+sqName(m.fr,m.fc)+" to "+sqName(m.r,m.c)+".";if(m.castle)text=m.c===6?"I castle kingside.":"I castle queenside.";if(m.promo)text+=" I promote to a queen.";return text}
+
 const $=id=>document.getElementById(id), boardEl=$("board"), clone=b=>b.map(r=>r.slice()), color=p=>p&&(p===p.toUpperCase()?"w":"b"), opp=c=>c==="w"?"b":"w";
 const sqName=(r,c)=>files[c]+(8-r), inside=(r,c)=>r>=0&&r<8&&c>=0&&c<8;
 
@@ -112,9 +120,13 @@ function animateMove(m,capture=false){
 function make(m){
  if(gameOver)return;
  const text=notation(m,board[m.fr][m.fc]);
+ const movingPiece=board[m.fr][m.fc];
+ const captured=!!board[m.r][m.c]||!!m.ep;
  const old=applyMove(m,true);
  selected=null;$("heard").textContent=text;draw();finishCheck();
  animateMove(m,!!old.captured||!!m.ep);
+ startClock();
+ if($("mode").value==="ai"&&movingPiece&&color(movingPiece)==="b")speak(announceMove(m,movingPiece,captured));
  if(inCheck(board,turn)){magicSound("check");magicMessage("Check!");speak("Check.");}
  if(gameOver&&inCheck(board,turn)){magicSound("check");magicMessage("Checkmate!");speak("Checkmate.");}
  else if(gameOver){speak("Stalemate. The game is drawn.");}
@@ -202,7 +214,8 @@ function setupVoice(){
  $("stopVoice").onclick=()=>voice&&voice.stop();
 }
 $("undoBtn").onclick=()=>{if(undo()&&$("mode").value==="ai")undo()};
-$("resetBtn").onclick=()=>{board=start();turn="w";selected=null;history=[];enPassant=null;castling={K:true,Q:true,k:true,q:true};gameOver=false;$("status").textContent="New game. White to move.";draw();speak("New game. White to move.")};
+$("resetBtn").onclick=()=>{board=start();turn="w";selected=null;history=[];enPassant=null;castling={K:true,Q:true,k:true,q:true};gameOver=false;resetClock();$("status").textContent="New game. White to move.";draw();speak("New game. White to move.")};
 $("mode").onchange=()=>{$("status").textContent=$("mode").value==="human"?"Two-player mode.":"Play the Wizard — you are White."};
-setupVoice();draw();speak("Welcome to Wizard's Chess. White to move.");
+$("timeControl").onchange=resetClock;
+resetClock();setupVoice();draw();speak("Welcome to Wizards Chess. White to move.");
 })();
