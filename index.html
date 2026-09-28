@@ -1,0 +1,10 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#0b1020"><title>Wizard's Chess</title><link rel="stylesheet" href="styles.css"></head>
+<body><main class="app"><header class="hero"><div><p class="eyebrow">VOICE • CHESS • MAGIC</p><h1>Wizard's Chess</h1><p class="tagline">Knight to E5. Speak your move. Let the board answer.</p></div><div class="turn-badge" id="turnBadge">White to move</div></header>
+<section class="game-shell"><aside class="panel controls"><h2>Spellbook</h2>
+<label>Mode<select id="mode"><option value="ai">Play the Wizard</option><option value="human">Two players</option></select></label>
+<label>Difficulty<select id="difficulty"><option value="easy">Apprentice</option><option value="medium" selected>Wizard</option><option value="hard">Archmage</option></select></label>
+<button id="voiceBtn" class="primary">🎙 Listen</button><button id="stopVoice">Stop listening</button><button id="undoBtn">↶ Undo</button><button id="resetBtn">↻ New game</button>
+<div class="voice-box"><span id="voiceStatus">Voice idle</span><strong id="heard">Say “e2 e4” or “knight to f3”</strong></div><div class="legend"><span class="dot white"></span> White <span class="dot black"></span> Black</div></aside>
+<section class="board-area"><div class="board-wrap"><div id="board" class="board" aria-label="Chess board"></div></div><div class="status" id="status">Choose a square or speak a move.</div><div class="moves"><h2>Chronicle</h2><ol id="moveList"></ol></div></section></section>
+<footer><span id="support">Voice control uses your browser's Web Speech API when available.</span><span>Local game • no account required</span></footer></main><script src="app.js"></script></body></html>
