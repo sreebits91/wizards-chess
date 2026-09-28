@@ -92,9 +92,26 @@ function finishCheck(){
  else if(inCheck(board,turn))$("status").textContent="Check!";
  else $("status").textContent=turn==="w"?"Your move.":"The wizard is thinking…";
 }
-function make(m){
+
+function magicSound(type="move"){
+  try{
+    const C=window.AudioContext||window.webkitAudioContext;if(!C)return;
+    const a=new C(),now=a.currentTime;
+    const notes=type==="capture"?[180,270,420,620]:type==="check"?[220,330,440,660]:[330,440,554,740];
+    notes.forEach((f,i)=>{const o=a.createOscillator(),g=a.createGain();o.type=i%2?"triangle":"sine";o.frequency.setValueAtTime(f,now+i*.07);g.gain.setValueAtTime(.0001,now+i*.07);g.gain.exponentialRampToValueAtTime(.07,now+i*.07+.025);g.gain.exponentialRampToValueAtTime(.0001,now+i*.07+.18);o.connect(g).connect(a.destination);o.start(now+i*.07);o.stop(now+i*.07+.2)});
+  }catch(e){}
+}
+function magicBurst(square,type="move"){
+  const r=square.getBoundingClientRect(),b=document.createElement("div");b.className="magic-burst";b.style.left=(r.left+r.width/2)+"px";b.style.top=(r.top+r.height/2)+"px";document.body.appendChild(b);setTimeout(()=>b.remove(),700);
+  if(type==="check"){const f=document.createElement("div");f.className="magic-flash";document.body.appendChild(f);setTimeout(()=>f.remove(),400)}
+}
+function magicMessage(text){const x=document.createElement("div");x.className="magic-message";x.textContent=text;document.body.appendChild(x);setTimeout(()=>x.remove(),1300)}
+function animateMove(m,capture=false){
+  requestAnimationFrame(()=>{const target=boardEl.querySelector(`.sq[data-r="${m.r}"][data-c="${m.c}"]`);if(!target)return;target.classList.add(capture?"magic-capture":"magic-move","magic-cast");magicBurst(target,capture?"capture":"move");magicSound(capture?"capture":"move")});
+}
+\nfunction make(m){
  if(gameOver)return;const text=notation(m,board[m.fr][m.fc]);applyMove(m,true);selected=null;$("heard").textContent=text;draw();finishCheck();
- if(!gameOver&&$("mode").value==="ai"&&turn==="b")setTimeout(aiMove,180);
+ animateMove(m, !!old.captured || !!m.ep); if(inCheck(board,turn)){magicSound("check"); magicMessage("Check!");} if(gameOver&&inCheck(board,turn)){magicSound("check"); magicMessage("Checkmate!");} if(!gameOver&&$("mode").value==="ai"&&turn==="b")setTimeout(aiMove,260);
 }
 function clickSquare(r,c){
  if(gameOver||($("mode").value==="ai"&&turn==="b"))return;const p=board[r][c];
