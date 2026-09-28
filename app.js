@@ -200,7 +200,7 @@ function setupVoice(){
  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
  if(!SR){$("support").textContent="Speech recognition is not available in this browser. Use the board controls.";$("voiceBtn").disabled=true;return}
  voice=new SR();voice.lang="en-GB";voice.interimResults=false;voice.continuous=false;
- voice.onstart=()=>{$("voiceStatus").textContent="Listening…";$("voiceBtn").textContent="🎙 Listening";speak("I am listening.")};
+ voice.onstart=()=>{$("voiceStatus").textContent="Listening…";$("voiceBtn").textContent="🎙 Listening";});
  voice.onend=()=>{$("voiceStatus").textContent="Voice idle";$("voiceBtn").textContent="🎙 Listen"};
  voice.onerror=e=>{$("voiceStatus").textContent="Voice error: "+e.error;speak(e.error==="not-allowed"?"Please allow microphone access.": "I could not hear you. Please try again.")};
  voice.onresult=e=>{
