@@ -178,7 +178,8 @@ function aiMove(){
 }
 function parseVoice(t){
  t=t.toLowerCase().replace(/[^a-z0-9 ]/g," ").replace(/\s+/g," ").trim();
- const nums={one:1,two:2,three:3,four:4,five:5,six:6,seven:7,eight:8};for(const k in nums)t=t.replaceAll(k,String(nums[k]));
+ const nums={one:"1",two:"2",three:"3",four:"4",five:"5",six:"6",seven:"7",eight:"8"};for(const k in nums)t=t.replaceAll(k,nums[k]);
+ t=t.replace(/b\s*one\s*b\s*two\s*three/g,"b1 b3").replace(/b\s*one\s*b\s*two\s*three\s*$/g,"b1 b3");
  const map={a:0,b:1,c:2,d:3,e:4,f:5,g:6,h:7};let from,to,match=t.match(/([a-h])\s*([1-8]).*?([a-h])\s*([1-8])/);
  if(match)from=[8-Number(match[2]),map[match[1]]],to=[8-Number(match[4]),map[match[3]]];
  else{const pc={pawn:"P",knight:"N",bishop:"B",rook:"R",queen:"Q",king:"K"},piece=Object.keys(pc).find(k=>t.includes(k)),dest=t.match(/([a-h])\s*([1-8])/);
