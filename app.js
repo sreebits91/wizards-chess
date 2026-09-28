@@ -109,7 +109,7 @@ function magicMessage(text){const x=document.createElement("div");x.className="m
 function animateMove(m,capture=false){
   requestAnimationFrame(()=>{const target=boardEl.querySelector(`.sq[data-r="${m.r}"][data-c="${m.c}"]`);if(!target)return;target.classList.add(capture?"magic-capture":"magic-move","magic-cast");magicBurst(target,capture?"capture":"move");magicSound(capture?"capture":"move")});
 }
-\nfunction make(m){
+function make(m){
  if(gameOver)return;const text=notation(m,board[m.fr][m.fc]);const old=applyMove(m,true);selected=null;$("heard").textContent=text;draw();finishCheck();
  animateMove(m, !!old.captured || !!m.ep); if(inCheck(board,turn)){magicSound("check"); magicMessage("Check!");} if(gameOver&&inCheck(board,turn)){magicSound("check"); magicMessage("Checkmate!");} if(!gameOver&&$("mode").value==="ai"&&turn==="b")setTimeout(aiMove,260);
 }
